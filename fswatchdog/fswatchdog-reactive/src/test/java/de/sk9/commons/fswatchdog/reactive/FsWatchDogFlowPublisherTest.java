@@ -19,19 +19,19 @@ import org.junit.jupiter.api.Test;
 import de.sk9.commons.fswatchdog.reactive.FsEvent.Type;
 
 
-class WatchDirFlowPublisherTest {
+class FsWatchDogFlowPublisherTest {
 
 	private static final String FILE_PREFIX = "file";
 	private Path testDir;
 
 	@BeforeEach
 	void beforeEach() throws IOException {
-		testDir = Files.createTempDirectory(WatchDirFlowPublisherTest.class.getSimpleName());
+		testDir = Files.createTempDirectory(FsWatchDogFlowPublisherTest.class.getSimpleName());
 	}
 	
 	@Test
 	void testHappyPath() throws IOException, InterruptedException {
-		WatchDirFlowPublisher publisher = new WatchDirFlowPublisher(testDir);
+		FsWatchDogFlowPublisher publisher = new FsWatchDogFlowPublisher(testDir);
 		
 		Subscriber<FsEvent> subscriber = new FSEventSubscriber();		
 		Subscriber<FsEvent> mock = spy(subscriber);
@@ -52,7 +52,7 @@ class WatchDirFlowPublisherTest {
 	void testNotSoHappyPath() throws InterruptedException {
 		Path notExisting = Path.of("this-path-does-not-exist");
 		assertThrows(IllegalStateException.class, () -> {
-			new WatchDirFlowPublisher(notExisting);
+			new FsWatchDogFlowPublisher(notExisting);
 		});
 	}
 	

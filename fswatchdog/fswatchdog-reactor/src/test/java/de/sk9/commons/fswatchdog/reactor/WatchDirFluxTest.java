@@ -18,7 +18,7 @@ import org.reactivestreams.Subscription;
 
 import de.sk9.commons.fswatchdog.reactive.FsEvent;
 import de.sk9.commons.fswatchdog.reactive.FsEvent.Type;
-import de.sk9.commons.fswatchdog.reactive.WatchDirFlowPublisher;
+import de.sk9.commons.fswatchdog.reactive.FsWatchDogFlowPublisher;
 import reactor.adapter.JdkFlowAdapter;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
@@ -41,7 +41,7 @@ class WatchDirFluxTest {
 		Flux<Path> dirFlux = Flux.just(testDir1, testDir2); 
 		
 		Flux<FsEvent> eventsFlux = dirFlux
-			.flatMap(path -> JdkFlowAdapter.flowPublisherToFlux(new WatchDirFlowPublisher(path)))
+			.flatMap(path -> JdkFlowAdapter.flowPublisherToFlux(new FsWatchDogFlowPublisher(path)))
 			.log();
 
 		Subscriber<FsEvent> subscriber = new FSEventSubscriber();		
@@ -68,7 +68,7 @@ class WatchDirFluxTest {
 		Flux<Path> dirFlux = dirSink.asFlux(); 
 		
 		Flux<FsEvent> eventsFlux = dirFlux
-			.flatMap(path -> JdkFlowAdapter.flowPublisherToFlux(new WatchDirFlowPublisher(path)))
+			.flatMap(path -> JdkFlowAdapter.flowPublisherToFlux(new FsWatchDogFlowPublisher(path)))
 			.log();
 
 		Subscriber<FsEvent> subscriber = new FSEventSubscriber();		

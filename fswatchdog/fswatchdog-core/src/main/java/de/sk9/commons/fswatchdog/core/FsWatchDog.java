@@ -26,8 +26,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 //@SuppressWarnings("java:S125")
-public class WatchDir {
-	private static Logger log = LogManager.getLogger(WatchDir.class);
+public class FsWatchDog {
+	private static Logger log = LogManager.getLogger(FsWatchDog.class);
 
 	private WatchService watcher;
 	private final Map<WatchKey, Path> keys;
@@ -36,7 +36,7 @@ public class WatchDir {
 
 	private boolean configChanged;
 
-	public WatchDir(Path dir, ThreadFactory threadFactory, Subscriber subscriber) {
+	public FsWatchDog(Path dir, ThreadFactory threadFactory, Subscriber subscriber) {
 		this.subscriber = subscriber;
 		keys = new HashMap<>();
 

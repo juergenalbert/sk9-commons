@@ -19,7 +19,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-class WatchDirTest {
+class FsWatchDogTest {
 
 	private static final String DIR_PREFIX = "dir";
 	private static final String FILE_PREFIX = "file";
@@ -28,18 +28,18 @@ class WatchDirTest {
 	private AtomicInteger modified;
 	private AtomicInteger deleted;
 	private AtomicInteger error;
-	private WatchDir watchDir;
+	private FsWatchDog watchDir;
 	
 	@BeforeEach
 	void beforeEach() throws IOException {
-		testDir = Files.createTempDirectory(WatchDirTest.class.getSimpleName());
+		testDir = Files.createTempDirectory(FsWatchDogTest.class.getSimpleName());
 
 		created = new AtomicInteger(0);
 		modified = new AtomicInteger(0);
 		deleted = new AtomicInteger(0);
 		error = new AtomicInteger(0);
 		
-		watchDir = new WatchDir(testDir, Executors.defaultThreadFactory(), new Subscriber() {
+		watchDir = new FsWatchDog(testDir, Executors.defaultThreadFactory(), new Subscriber() {
 			@Override
 			public void onCreate(Path path) {
 				created.addAndGet(1);
@@ -139,7 +139,7 @@ class WatchDirTest {
 	
 	@Test
 	void testnotExistingPath() {
-		watchDir = new WatchDir(Path.of("not-existing-directory") , Executors.defaultThreadFactory(), new Subscriber() {
+		watchDir = new FsWatchDog(Path.of("not-existing-directory") , Executors.defaultThreadFactory(), new Subscriber() {
 			@Override
 			public void onCreate(Path path) {
 				throw new IllegalStateException("create");

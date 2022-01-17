@@ -10,17 +10,17 @@ import java.util.concurrent.Flow.Publisher;
 import java.util.concurrent.Flow.Subscriber;
 import java.util.concurrent.Flow.Subscription;
 
-import de.sk9.commons.fswatchdog.core.WatchDir;
+import de.sk9.commons.fswatchdog.core.FsWatchDog;
 import de.sk9.commons.fswatchdog.reactive.FsEvent.Type;
 
-public class WatchDirFlowPublisher implements Publisher<FsEvent>, de.sk9.commons.fswatchdog.core.Subscriber {
+public class FsWatchDogFlowPublisher implements Publisher<FsEvent>, de.sk9.commons.fswatchdog.core.Subscriber {
 
 	private Map<FsSubscription, Subscriber<? super FsEvent>> subscriptions = new HashMap<>();
-	private WatchDir watchDir;
+	private FsWatchDog watchDir;
 	boolean initialized = false;
 
-	public WatchDirFlowPublisher(Path dir) {
-		watchDir = new WatchDir(dir, Executors.defaultThreadFactory(), this);
+	public FsWatchDogFlowPublisher(Path dir) {
+		watchDir = new FsWatchDog(dir, Executors.defaultThreadFactory(), this);
 		initialized = true;
 	}
 
