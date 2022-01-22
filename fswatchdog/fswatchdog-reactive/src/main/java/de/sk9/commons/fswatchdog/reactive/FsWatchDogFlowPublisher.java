@@ -5,27 +5,27 @@ import java.nio.BufferOverflowException;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Flow.Publisher;
 import java.util.concurrent.Flow.Subscriber;
 import java.util.concurrent.Flow.Subscription;
 
 import de.sk9.commons.fswatchdog.core.FsWatchDog;
+import de.sk9.commons.fswatchdog.core.FsWatchDogFactory;
 import de.sk9.commons.fswatchdog.reactive.FsEvent.Type;
 
 public class FsWatchDogFlowPublisher implements Publisher<FsEvent>, de.sk9.commons.fswatchdog.core.Subscriber {
 
 	private Map<FsSubscription, Subscriber<? super FsEvent>> subscriptions = new HashMap<>();
-	private FsWatchDog watchDir;
+	private FsWatchDog watchDog;
 	boolean initialized = false;
 
-	public FsWatchDogFlowPublisher(Path dir) {
-		watchDir = new FsWatchDog(dir, Executors.defaultThreadFactory(), this);
+	public FsWatchDogFlowPublisher(Path dir) throws IOException {
+		watchDog = FsWatchDogFactory.getInstance().create(dir, this);
 		initialized = true;
 	}
 
-	public void finish() throws InterruptedException {
-		watchDir.finish();
+	public void close() throws InterruptedException, IOException {
+		watchDog.close();
 	}
 
 	@Override

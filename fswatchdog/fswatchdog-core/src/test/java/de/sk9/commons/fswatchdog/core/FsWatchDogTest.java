@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Comparator;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
@@ -28,7 +29,7 @@ class FsWatchDogTest {
 	private AtomicInteger modified;
 	private AtomicInteger deleted;
 	private AtomicInteger error;
-	private FsWatchDog watchDir;
+	private FsWatchDog watchDog;
 	
 	@BeforeEach
 	void beforeEach() throws IOException {
@@ -39,7 +40,7 @@ class FsWatchDogTest {
 		deleted = new AtomicInteger(0);
 		error = new AtomicInteger(0);
 		
-		watchDir = new FsWatchDog(testDir, Executors.defaultThreadFactory(), new Subscriber() {
+		watchDog = FsWatchDogFactory.getInstance().create(testDir, new Subscriber() {
 			@Override
 			public void onCreate(Path path) {
 				created.addAndGet(1);
@@ -64,12 +65,14 @@ class FsWatchDogTest {
 	}
 	
 	@AfterEach
-	void afterEach() throws InterruptedException {
-		watchDir.finish();
+	void afterEach() throws InterruptedException, IOException {
+		watchDog.close();
 	}
 
 	@Test
 	void testFileLifecycle() throws IOException, InterruptedException {
+		TimeUnit.SECONDS.sleep(1);
+		
 		Path tempFile = Files.createTempFile(testDir, FILE_PREFIX, null);
 		Files.write(tempFile, "foo".getBytes(), StandardOpenOption.APPEND);
 		Files.delete(tempFile);
@@ -131,7 +134,7 @@ class FsWatchDogTest {
 	
 	@Test
 	void testFinish() throws IOException, InterruptedException {
-		watchDir.finish();
+		watchDog.close();
 		Files.createTempFile(testDir, FILE_PREFIX, null);
 		TimeUnit.SECONDS.sleep(1);
 		assertThat(created.intValue(), is(0));
@@ -139,7 +142,7 @@ class FsWatchDogTest {
 	
 	@Test
 	void testnotExistingPath() {
-		watchDir = new FsWatchDog(Path.of("not-existing-directory") , Executors.defaultThreadFactory(), new Subscriber() {
+		watchDog = new FsWatchDogNative(Path.of("not-existing-directory") , ForkJoinPool.commonPool(), new Subscriber() {
 			@Override
 			public void onCreate(Path path) {
 				throw new IllegalStateException("create");

@@ -11,6 +11,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 
+import javax.management.RuntimeErrorException;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.reactivestreams.Subscriber;
@@ -41,7 +43,7 @@ class WatchDirFluxTest {
 		Flux<Path> dirFlux = Flux.just(testDir1, testDir2); 
 		
 		Flux<FsEvent> eventsFlux = dirFlux
-			.flatMap(path -> JdkFlowAdapter.flowPublisherToFlux(new FsWatchDogFlowPublisher(path)))
+			.flatMap(path -> eventFluxFromPath(path))
 			.log();
 
 		Subscriber<FsEvent> subscriber = new FSEventSubscriber();		
@@ -62,13 +64,21 @@ class WatchDirFluxTest {
 		verify(mock, times(0)).onComplete();
 	}
 
+	private Flux<FsEvent> eventFluxFromPath(Path path) {
+		try {
+			return JdkFlowAdapter.flowPublisherToFlux(new FsWatchDogFlowPublisher(path));
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	@Test
 	void testTwoHotDirs() throws IOException, InterruptedException {
 		Sinks.Many<Path> dirSink = Sinks.unsafe().many().multicast().directBestEffort();
 		Flux<Path> dirFlux = dirSink.asFlux(); 
 		
 		Flux<FsEvent> eventsFlux = dirFlux
-			.flatMap(path -> JdkFlowAdapter.flowPublisherToFlux(new FsWatchDogFlowPublisher(path)))
+			.flatMap(path -> eventFluxFromPath(path))
 			.log();
 
 		Subscriber<FsEvent> subscriber = new FSEventSubscriber();		
