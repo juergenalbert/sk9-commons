@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 
 import org.apache.logging.log4j.LogManager;
@@ -35,6 +36,10 @@ class FsWatchDogNative implements FsWatchDog {
 	private Subscriber subscriber;
 
 	private boolean configChanged;
+
+	public FsWatchDogNative(Path dir, Subscriber subscriber) {
+		this(dir, Executors.newSingleThreadExecutor(), subscriber);
+	}
 
 	public FsWatchDogNative(Path dir, Executor executor, Subscriber subscriber) {
 		this.subscriber = subscriber;
