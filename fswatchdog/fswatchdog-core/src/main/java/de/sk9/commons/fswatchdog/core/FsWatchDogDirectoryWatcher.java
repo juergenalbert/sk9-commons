@@ -2,7 +2,6 @@ package de.sk9.commons.fswatchdog.core;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.concurrent.Executor;
 
 import io.methvin.watcher.DirectoryWatcher;
 

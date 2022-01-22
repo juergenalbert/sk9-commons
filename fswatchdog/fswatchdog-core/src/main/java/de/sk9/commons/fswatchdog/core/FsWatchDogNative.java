@@ -19,6 +19,7 @@ import java.nio.file.WatchService;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.stream.Stream;
 
@@ -32,7 +33,6 @@ class FsWatchDogNative implements FsWatchDog {
 	private WatchService watcher;
 	private final Map<WatchKey, Path> keys;
 	private Subscriber subscriber;
-	Thread thread;
 
 	private boolean configChanged;
 
@@ -44,22 +44,19 @@ class FsWatchDogNative implements FsWatchDog {
 			watcher = FileSystems.getDefault().newWatchService();
 			registerAll(dir);
 
-			executor.execute(new Runnable() {
-				@Override
-				public void run() {
-					processEvents();
-				}
-			});
+			CompletableFuture.supplyAsync(
+					() -> {
+						processEvents();
+						return null;
+					},
+					executor);
 		} catch (IOException ex) {
 			subscriber.onError(ex);
 		}
 	}
-	
-	public void close() throws InterruptedException {
-		if (thread != null) {
-			thread.interrupt();
-			thread.join();
-		}
+
+	public void close() throws InterruptedException, IOException {
+		watcher.close();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -134,7 +131,7 @@ class FsWatchDogNative implements FsWatchDog {
 						Path child = dir.resolve(name);
 
 						log.debug(() -> "event " + kind.name() + ": " + child);
-						
+
 						if (kind == ENTRY_CREATE) {
 							try {
 								if (Files.isDirectory(child, NOFOLLOW_LINKS)) {
