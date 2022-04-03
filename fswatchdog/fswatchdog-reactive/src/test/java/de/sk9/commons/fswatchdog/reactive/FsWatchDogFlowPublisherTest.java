@@ -51,7 +51,7 @@ class FsWatchDogFlowPublisherTest {
 	@Test 
 	void testNotSoHappyPath() throws InterruptedException {
 		Path notExisting = Path.of("this-path-does-not-exist");
-		assertThrows(IllegalStateException.class, () -> {
+		assertThrows(Exception.class, () -> {
 			new FsWatchDogFlowPublisher(notExisting);
 		});
 	}
