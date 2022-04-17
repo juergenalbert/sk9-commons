@@ -11,8 +11,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 
-import javax.management.RuntimeErrorException;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.reactivestreams.Subscriber;
@@ -26,11 +24,10 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 
 class WatchDirFluxTest {
-	
+
 	private static final String FILE_PREFIX = null;
 	private static Path testDir1;
 	private static Path testDir2;
-
 
 	@BeforeEach
 	void beforeEach() throws IOException {
@@ -40,22 +37,20 @@ class WatchDirFluxTest {
 
 	@Test
 	void testTwoDirs() throws IOException, InterruptedException {
-		Flux<Path> dirFlux = Flux.just(testDir1, testDir2); 
-		
-		Flux<FsEvent> eventsFlux = dirFlux
-			.flatMap(path -> eventFluxFromPath(path))
-			.log();
+		Flux<Path> dirFlux = Flux.just(testDir1, testDir2);
 
-		Subscriber<FsEvent> subscriber = new FSEventSubscriber();		
+		Flux<FsEvent> eventsFlux = dirFlux.flatMap(path -> eventFluxFromPath(path)).log();
+
+		Subscriber<FsEvent> subscriber = new FSEventSubscriber();
 		Subscriber<FsEvent> mock = spy(subscriber);
-		
+
 		eventsFlux.subscribe(mock);
-		
+
 		Files.createTempFile(testDir1, FILE_PREFIX, null);
 		Files.createTempFile(testDir2, FILE_PREFIX, null);
-		
+
 		TimeUnit.SECONDS.sleep(1);
-		
+
 		verify(mock, times(1)).onSubscribe(any(Subscription.class));
 		verify(mock, times(2)).onNext(argThat(event -> {
 			return event.type() == Type.CREATED;
@@ -75,26 +70,24 @@ class WatchDirFluxTest {
 	@Test
 	void testTwoHotDirs() throws IOException, InterruptedException {
 		Sinks.Many<Path> dirSink = Sinks.unsafe().many().multicast().directBestEffort();
-		Flux<Path> dirFlux = dirSink.asFlux(); 
-		
-		Flux<FsEvent> eventsFlux = dirFlux
-			.flatMap(path -> eventFluxFromPath(path))
-			.log();
+		Flux<Path> dirFlux = dirSink.asFlux();
 
-		Subscriber<FsEvent> subscriber = new FSEventSubscriber();		
+		Flux<FsEvent> eventsFlux = dirFlux.flatMap(path -> eventFluxFromPath(path)).log();
+
+		Subscriber<FsEvent> subscriber = new FSEventSubscriber();
 		Subscriber<FsEvent> mock = spy(subscriber);
-		
+
 		eventsFlux.subscribe(mock);
-		
+
 		dirSink.tryEmitNext(testDir1);
 		Files.createTempFile(testDir1, FILE_PREFIX, null);
 
 		Files.createTempFile(testDir2, FILE_PREFIX, null);
 		dirSink.tryEmitNext(testDir2);
 		Files.createTempFile(testDir2, FILE_PREFIX, null);
-		
+
 		TimeUnit.SECONDS.sleep(1);
-		
+
 		verify(mock, times(1)).onSubscribe(any(Subscription.class));
 		verify(mock, times(2)).onNext(argThat(event -> {
 			return event.type() == Type.CREATED;
